@@ -42,7 +42,7 @@ This repository contains the complete workflow from robot parameter identificati
 
 ```powershell
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/MaverickST/mobile-robot-estimation-suite.git
 cd Project
 
 # Setup unified virtual environment
@@ -227,8 +227,8 @@ This project implements the following Bayesian estimation algorithms:
 
 **Extended Kalman Filter (EKF)**
 - Linearizes nonlinear dynamics via Jacobian matrices F and H
-- Prediction: $\mathbf{x}_{k|k-1} = f(\mathbf{x}_{k-1}, \mathbf{u}_k)$
-- Update: $\mathbf{K}_k = \mathbf{P}_{k|k-1}\mathbf{H}_k^T(\mathbf{H}_k\mathbf{P}_{k|k-1}\mathbf{H}_k^T + \mathbf{R}_k)^{-1}$
+- Prediction: $\mathbf{x}_{k \mid k-1} = f(\mathbf{x}_{k-1}, \mathbf{u}_k)$
+- Update: $\mathbf{K}_k = \mathbf{P}_{k \mid k-1}\mathbf{H}_k^T(\mathbf{H}_k\mathbf{P}_{k \mid k-1}\mathbf{H}_k^T + \mathbf{R}_k)^{-1}$
 - Best for: Mildly nonlinear systems, fast execution
 
 **Unscented Kalman Filter (UKF)**
@@ -354,7 +354,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 👤 Author
 
-**MaverickST**  
+**Maverick Sossa Tobon**  
 Bachelor's Thesis Project  
 January 2026
 
