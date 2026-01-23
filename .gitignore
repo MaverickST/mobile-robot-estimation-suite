@@ -206,6 +206,8 @@ BUILD/
 **/BUILD/
 
 # ESP-IDF specific
+sdkconfig
+**/sdkconfig
 sdkconfig.old
 **/sdkconfig.old
 sdkconfig.defaults.old
