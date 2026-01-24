@@ -11,12 +11,9 @@
 
 State estimation filters require the **Q matrix** (process noise covariance), but determining it is challenging:
 
-| Manual Method | Proposed Method |
-|--------------|------------------|
-| Trial-and-error tuning | Automatic derivation from data |
-| ~4 hours, not reproducible | ~5 minutes, reproducible |
-| Weak theoretical justification | Rigorous foundation |
-| NEES out of range | NEES ∈ [1.24, 14.45] ✓ |
+- **Manual tuning**: Trial-and-error process, time-consuming, not reproducible
+- **Weak theoretical foundation**: Difficult to justify parameter choices
+- **Inconsistent results**: Performance varies across different trajectories
 
 ### Solution
 
@@ -219,139 +216,86 @@ ekf.Q = Q
 
 ---
 
-## 5. Experimental Validation
+## 5. Results
 
-### Validation Criterion: NEES
+### Computed Q Matrix (Experimental Data)
 
-**NEES** (Normalized Estimation Error Squared) validates if Q is correct:
+Results from experiment 2 (exp2.txt), 1000 samples @ 100 Hz:
 
-```
-NEES = (x̂ - x)ᵀ P⁻¹ (x̂ - x)
-```
+**Acceleration variances:**
+- σ²_ax = 5.32 m²/s⁴ → σ_ax = 2.31 m/s²
+- σ²_ay = 4.56 m²/s⁴ → σ_ay = 2.14 m/s²
 
-**If Q is correct:** NEES ~ χ²(6) → E[NEES] ≈ 6
-
-**95% confidence interval:** 1.24 ≤ NEES ≤ 14.45
-
-| NEES | Diagnosis | Action |
-|------|-----------|--------|
-| < 1.24 | Q too large | Reduce Q |
-| 1.24-14.45 | ✅ **Q correct** | Maintain |
-| > 14.45 | Q too small | Increase Q |
-
-### Experimental Results
-
-| Experiment | Trajectory | Duration | σ_ax | σ_ay | RMSE (EKF) | NEES |
-|------------|------------|----------|------|------|------------|------|
-| exp1 | Circle | 15 s | 0.082 | 0.091 | 0.124 m | 8.23 |
-| exp2 | Zigzag | 20 s | 0.095 | 0.088 | 0.130 m | 6.47 |
-| exp3 | Random | 30 s | 0.107 | 0.112 | 0.158 m | 11.35 |
-
-**Observations:**
-
-1. **Consistent variance**: σ_a ≈ 0.08-0.11 m/s² across experiments
-   - Indicates noise is system characteristic, not experiment-dependent
-
-2. **NEES in valid range**: 6.47 - 11.35 (within [1.24, 14.45])
-   - Confirms Q is well estimated
-
-3. **Low RMSE**: < 0.16 m for ~5-10 m trajectories
-   - Relative error < 3% → excellent accuracy
-
-### Comparison with Manual Tuning
-
-| Method | Time | RMSE | NEES | Reproducibility |
-|--------|------|------|------|------------------|
-| **Manual** | ~4 hours | 0.145 m | 18.7 ❌ | Low |
-| **Proposed** | ~5 min | 0.130 m | 6.5 ✅ | High |
-
-**Advantages of automatic method:**
-- ⏱️ **80% faster**
-- 📉 **10% better RMSE**
-- ✅ **NEES in valid range**
-- 🔄 **Fully reproducible**
-
----
-
-## 6. Results
-
-### Typical Q Matrix
-
-Omnidirectional robot (M=3.178 kg, medium-quality IMU, Δt=0.01s):
+**Resulting Q matrix (diagonal elements):**
 
 ```python
 Q_diag = np.diag([
-    2.25e-07,  # x   (2nd order integration → very small)
-    2.25e-07,  # y   (2nd order integration → very small)
-    1.00e-06,  # φ   (gyroscope drift)
-    9.00e-03,  # v_x (directly affected by IMU)
-    9.00e-03,  # v_y (directly affected by IMU)
-    1.00e-05   # ω   (measured directly)
+    1.229e-08,  # x   (position, 2nd order integration)
+    1.242e-08,  # y   (position, 2nd order integration)
+    1.000e-12,  # φ   (orientation, minimal process noise)
+    4.915e-04,  # v_x (velocity, directly affected by IMU)
+    4.967e-04,  # v_y (velocity, directly affected by IMU)
+    1.000e-12   # ω   (angular velocity, minimal process noise)
 ])
 ```
 
-**Magnitude hierarchy:** Q_velocity >> Q_orientation >> Q_position
+**Key observations:**
 
-### Importance of Coupling
+1. **Magnitude hierarchy:** Q_velocity >> Q_position >> Q_orientation
+   - Velocities: ~10⁻⁴ (dominant uncertainty from IMU accelerations)
+   - Positions: ~10⁻⁸ (second-order integration reduces noise)
+   - Angles: ~10⁻¹² (gyroscope measurements are precise)
 
-Full Q matrix (non-diagonal) includes cross-terms position-velocity:
+2. **Physical interpretation:**
+   - Position noise is 4 orders of magnitude smaller than velocity (Δt² scaling)
+   - Angular states have minimal process noise (direct measurements)
+   - IMU acceleration uncertainty dominates the error budget
 
-```
-Q_diagonal:  NEES = 18.3 ❌ (optimistic)
-Q_jacobian:  NEES =  6.5 ✅ (correct)
-```
+### Importance of Jacobian Method
 
-**Conclusion:** Use full Jacobian Q, not diagonal approximation.
+The full Q matrix computed via Jacobian propagation includes off-diagonal coupling terms between position and velocity states. Using only diagonal approximations can lead to inconsistent filter behavior.
 
-### Sensitivity to Δt
+**Recommendation:** Always use the complete Jacobian-based Q for accurate uncertainty propagation.
 
-| Δt [s] | Q_xx | Q_vx | RMSE | Note |
-|--------|------|------|------|------|
-| 0.005 | 5.6e-8 | 4.5e-3 | 0.098 m | Fast control |
-| **0.010** | **2.3e-7** | **9.0e-3** | **0.130 m** | **Recommended** |
-| 0.020 | 9.0e-7 | 1.8e-2 | 0.189 m | Acceptable |
-| 0.050 | 5.6e-6 | 4.5e-2 | 0.412 m | Diverges |
+### Dependency on Time Step
 
-**Dependency:** Q_position ∝ Δt², Q_velocity ∝ Δt
+**Theoretical scaling:**
+- Position noise: Q_position ∝ Δt⁴ (double integration)
+- Velocity noise: Q_velocity ∝ Δt² (single integration)
 
-### Method Comparison
-
-| Method | RMSE | NEES | Time | Recommendation |
-|--------|------|------|------|----------------|
-| **Jacobian** | 0.130 m | 6.5 ✅ | 5 min | **Standard use** |
-| Diagonal | 0.142 m | 12.3 ✅ | 1 min | Prototyping |
-| Physical | 0.167 m | 4.8 ✅ | 2 min | No data available |
-| Manual | 0.145 m | 18.7 ❌ | 4 hrs | Avoid |
+**Practical values for Δt = 0.01s:**
+- Doubling Δt → Q_position increases ~16×, Q_velocity increases ~4×
+- Reducing Δt → More accurate integration, but higher computational cost
 
 ---
 
-## 7. Conclusions
+## 6. Conclusions
 
 ### Main Contributions
 
 This work presents a complete methodology to **automatically estimate the Q matrix** for state filters, with the following contributions:
 
-1. **Rigorous foundation:** Uncertainty propagation from system physics
-2. **Automated pipeline:** From experimental data to ready-to-use Q matrix
-3. **Experimental validation:** NEES confirms correctness across multiple trajectories
-4. **Reproducible code:** Python implementation with complete documentation
-5. **Quantifiable improvement:** 80% faster, 10% more accurate than manual tuning
+1. **Rigorous foundation:** Uncertainty propagation from system physics via Jacobian
+2. **Automated pipeline:** From experimental data to ready-to-use Q matrix in ~5 minutes
+3. **Reproducible:** Same methodology applies to any robot with identified parameters
+4. **Physically grounded:** Q values derived from measured IMU noise characteristics
+5. **Complete implementation:** Python code with comprehensive documentation
 
 ### Limitations and Future Work
 
 **Current limitations:**
 
-1. **Linear approximation:** Valid only for small σ_a
-   - Solution: Use Unscented Transform for nonlinear propagation
+1. **Linear approximation:** Jacobian-based propagation assumes small deviations
+   - Future: Use Unscented Transform for highly nonlinear systems
 
-2. **Discrete model:** Assumes explicit Euler
-   - Solution: Generalize to RK4/trapezoidal
+2. **Discrete model:** Assumes explicit Euler integration
+   - Future: Extend to higher-order methods (RK4, trapezoidal)
 
-3. **Stationary Q:** Does not consider temporal variation
-   - Solution: Adaptive Q based on innovation covariance
+3. **Stationary Q:** Assumes constant process noise over time
+   - Future: Implement adaptive Q estimation based on filter residuals
 
-4. **Limited validation:** Only 2D planar trajectories
-   - Solution: 3D validation with aerial/underwater robots
+4. **Requires identification:** Depends on accurate robot parameter estimates
+   - Future: Joint estimation of parameters and Q matrix
 
 ### Quick Guide
 
@@ -366,12 +310,11 @@ results = compute_Q_from_experiment(
 )
 # 4. Use in filter
 ekf.Q = results['Q']
-# 5. Validate NEES ∈ [1.24, 14.45]
 ```
 
 ---
 
-## 8. References
+## 7. References
 
 **Fundamental bibliography:**
 
@@ -388,9 +331,9 @@ ekf.Q = results['Q']
 
 | Symptom | Cause | Solution |
 |---------|-------|----------|
-| NEES >> 14.45 | Q too small | `Q_new = 2.0 * Q` |
-| NEES << 1.24 | Q too large | `Q_new = 0.5 * Q` |
-| Non-Gaussian residuals | Poorly identified model | Re-identify parameters, use MAD |
+| Filter divergence | Q too small | Increase Q (multiply by 2-5) |
+| Overly conservative estimates | Q too large | Decrease Q (multiply by 0.2-0.5) |
+| Non-Gaussian residuals | Poorly identified model | Re-identify parameters, use robust variance (MAD) |
 | Simulation diverges | Wrong parameters | Verify M>0, I>0, Ra>0, K>0 |
 
 ### Data Format

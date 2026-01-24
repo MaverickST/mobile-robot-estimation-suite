@@ -2,10 +2,18 @@
 
 ## Executive Summary
 
-This document describes the implementation methodology of three Bayesian filters (**Extended Kalman Filter**, **Unscented Kalman Filter**, and **Particle Filter**) applied to state estimation of a three-wheeled omnidirectional robot. The filters process noisy measurements from inertial sensors (IMU) and encoders to estimate the complete state vector $\mathbf{x} = [x, y, \psi, v_x, v_y, \omega]^T$ in real-time.
+This document describes the implementation methodology of three Bayesian filters (**Extended Kalman Filter**, **Unscented Kalman Filter**, and **Particle Filter**) applied to state estimation of a three-wheeled omnidirectional robot. The filters process noisy measurements from inertial sensors (IMU) and encoders to estimate the complete state vector:
+
+$$\mathbf{x} = [x, y, \psi, v_x, v_y, \omega]^T$$
+
+in real-time.
 
 The implementation follows a modular design that separates:
-1. **System model** ([`omnidirectional.py`](../state_estimation/models/omnidirectional.py)): Dynamics $f(\mathbf{x}, \mathbf{u})$ and measurements $h(\mathbf{x})$
+
+1. **System model** ([`omnidirectional.py`](../state_estimation/models/omnidirectional.py)): Dynamics and measurements
+
+   $$f(\mathbf{x}, \mathbf{u}), \quad h(\mathbf{x})$$
+
 2. **Bayesian filters** ([`filters/`](../state_estimation/filters/)): EKF, UKF, PF with unified API
 3. **Execution scripts** ([`examples/`](../examples/)): Configuration, data loading, and validation
 
@@ -21,10 +29,14 @@ $$
 $$
 
 Where:
-- $(x, y)$: Position in global frame [m]
-- $\psi$: Orientation (heading angle) [rad]
-- $(v_x, v_y)$: Velocity in global frame [m/s]
-- $\omega$: Angular velocity [rad/s]
+
+- Position in global frame [m]: $$x, y$$
+
+- Orientation (heading angle) [rad]: $$\psi$$
+
+- Velocity in global frame [m/s]: $$v_x, v_y$$
+
+- Angular velocity [rad/s]: $$\omega$$
 
 **Control vector** (accelerations in body frame):
 $$
@@ -62,9 +74,17 @@ v_{y,k} + a_y \cdot \Delta t \\
 \end{bmatrix}
 $$
 
-Where $a_x = \cos\psi \cdot a_{x,b} - \sin\psi \cdot a_{y,b}$ and $a_y = \sin\psi \cdot a_{x,b} + \cos\psi \cdot a_{y,b}$.
+Where:
 
-**Note:** Angular velocity $\omega$ follows a random walk model (Wiener process), assuming smooth changes between time steps.
+$$a_x = \cos\psi \cdot a_{x,b} - \sin\psi \cdot a_{y,b}$$
+
+$$a_y = \sin\psi \cdot a_{x,b} + \cos\psi \cdot a_{y,b}$$
+
+**Note:** Angular velocity follows a random walk model (Wiener process):
+
+$$\omega_{k+1} = \omega_k + \text{noise}$$
+
+assuming smooth changes between time steps.
 
 ### Measurement Model
 
@@ -90,7 +110,9 @@ Implemented in [`omnidirectional.py`](../state_estimation/models/omnidirectional
 
 ### 1.1 Mathematical Foundation
 
-The EKF locally linearizes the nonlinear system via first-order Taylor expansions around the estimated state, using Jacobian matrices $\mathbf{F}$ and $\mathbf{H}$.
+The EKF locally linearizes the nonlinear system via first-order Taylor expansions around the estimated state, using Jacobian matrices:
+
+$$\mathbf{F} = \frac{\partial f}{\partial \mathbf{x}}, \quad \mathbf{H} = \frac{\partial h}{\partial \mathbf{x}}$$
 
 #### Prediction Step
 
@@ -172,11 +194,15 @@ $$
 \end{bmatrix}
 $$
 
-**Physical interpretation:** The first and second rows represent the sensitivity of body-frame velocities with respect to global velocities and orientation. The terms $\frac{\partial v_{x,b}}{\partial \psi}$ capture the variation in velocity projection when rotating the reference frame.
+**Physical interpretation:** The first and second rows represent the sensitivity of body-frame velocities with respect to global velocities and orientation. These partial derivatives capture the variation in velocity projection when rotating the reference frame.
 
 ### 1.3 Angle Handling
 
-**Problem:** The angle $\psi \in [-\pi, \pi]$ presents discontinuities (e.g., $\pi$ and $-\pi$ represent the same orientation, but their arithmetic difference is $2\pi$).
+**Problem:** The angle has periodic boundaries:
+
+$$\psi \in [-\pi, \pi]$$
+
+This presents discontinuities - for example, the orientations at $+\pi$ and $-\pi$ are identical physically, but their arithmetic difference is $2\pi$, which can cause filter instability.
 
 **Solution implemented:**
 

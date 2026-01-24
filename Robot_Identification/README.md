@@ -30,7 +30,9 @@ This project implements a comprehensive **three-stage parameter identification**
 
 #### 1.1 Forward Kinematics
 
-For a three-wheeled omnidirectional robot, the relationship between robot velocity in the body frame and wheel angular velocities is given by the **kinematic matrix** $\mathbf{H}$:
+For a three-wheeled omnidirectional robot, the relationship between robot velocity in the body frame and wheel angular velocities is given by the **kinematic matrix:**
+
+$$\mathbf{H}$$
 
 $$
 \begin{bmatrix}
@@ -47,9 +49,12 @@ v_y \\
 $$
 
 Where:
-- $\boldsymbol{\omega} = [\omega_1, \omega_2, \omega_3]^T$: wheel angular velocities (rad/s)
-- $\mathbf{v} = [v_x, v_y, \Omega]^T$: robot velocity in body frame (m/s, m/s, rad/s)
-- $\mathbf{H} \in \mathbb{R}^{3 \times 3}$: kinematic transformation matrix
+
+- Wheel angular velocities [rad/s]: $$\boldsymbol{\omega} = [\omega_1, \omega_2, \omega_3]^T$$
+
+- Robot velocity in body frame [m/s, m/s, rad/s]: $$\mathbf{v} = [v_x, v_y, \Omega]^T$$
+
+- Kinematic transformation matrix: $$\mathbf{H} \in \mathbb{R}^{3 \times 3}$$
 
 #### 1.2 Kinematic Matrix Derivation
 
@@ -60,9 +65,12 @@ $$
 $$
 
 Where:
-- $\theta_i$: angular position of wheel $i$ from robot's X-axis (radians)
-- $r$: wheel radius (m)
-- $d$: distance from robot center to wheel contact point (m)
+
+- Angular position of wheel $i$ from robot's X-axis [radians]: $$\theta_i$$
+
+- Wheel radius [m]: $$r$$
+
+- Distance from robot center to wheel contact point [m]: $$d$$
 
 Thus, the kinematic matrix is:
 
@@ -76,9 +84,12 @@ $$
 $$
 
 For our configuration:
-- $\theta_1 = 150° = 5\pi/6$ rad
-- $\theta_2 = 270° = 3\pi/2$ rad
-- $\theta_3 = 30° = \pi/6$ rad
+
+$$\theta_1 = 150\degree = 5\pi/6 \text{ rad}$$
+
+$$\theta_2 = 270\degree = 3\pi/2 \text{ rad}$$
+
+$$\theta_3 = 30\degree = \pi/6 \text{ rad}$$
 
 **Reference:** Lynch, K. M., & Park, F. C. (2017). *Modern Robotics: Mechanics, Planning, and Control*. Cambridge University Press.
 
@@ -100,11 +111,9 @@ v_y \\
 \end{bmatrix}
 $$
 
-Where $\mathbf{H}^+$ is the Moore-Penrose pseudoinverse of $\mathbf{H}$:
+Where the Moore-Penrose pseudoinverse is:
 
-$$
-\mathbf{H}^+ = (\mathbf{H}^T \mathbf{H})^{-1} \mathbf{H}^T
-$$
+$$\mathbf{H}^+ = (\mathbf{H}^T \mathbf{H})^{-1} \mathbf{H}^T$$
 
 ### 2. Motor Electrical Model
 
@@ -117,11 +126,16 @@ V_i = R_a \cdot i_i + K \cdot \omega_i
 $$
 
 Where:
-- $V_i$: applied voltage to motor $i$ (V)
-- $i_i$: armature current (A)
-- $R_a$: armature resistance (Ω)
-- $K$: motor constant (V/(rad/s) = Nm/A)
-- $\omega_i$: wheel angular velocity (rad/s)
+
+- Applied voltage to motor $i$ [V]: $$V_i$$
+
+- Armature current [A]: $$i_i$$
+
+- Armature resistance [Ω]: $$R_a$$
+
+- Motor constant [V/(rad/s) = Nm/A]: $$K$$
+
+- Wheel angular velocity [rad/s]: $$\omega_i$$
 
 #### 2.2 Torque Equation
 
@@ -245,10 +259,14 @@ $$
 $$
 
 Where:
-- $(x, y)$: position in global frame (m)
-- $\phi$: orientation angle (rad)
-- $(v_x, v_y)$: velocity in global frame (m/s)
-- $\Omega$: angular velocity (rad/s)
+
+- Position in global frame [m]: $$x, y$$
+
+- Orientation angle [rad]: $$\phi$$
+
+- Velocity in global frame [m/s]: $$v_x, v_y$$
+
+- Angular velocity [rad/s]: $$\Omega$$
 
 #### 4.2 State-Space Equations
 
@@ -256,26 +274,28 @@ $$
 \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u}, t)
 $$
 
-Expanded:
+**Expanded form:**
+
+**Position dynamics:**
 
 $$
-\begin{bmatrix}
-\dot{x} \\
-\dot{y} \\
-\dot{\phi} \\
-\dot{v}_x \\
-\dot{v}_y \\
-\dot{\Omega}
-\end{bmatrix}
-=
-\begin{bmatrix}
-v_x \\
-v_y \\
-\Omega \\
-a_{\text{global},x} + \Omega \cdot v_y \\
-a_{\text{global},y} - \Omega \cdot v_x \\
-\tau_z / I
-\end{bmatrix}
+\dot{x} = v_x, \quad \dot{y} = v_y, \quad \dot{\phi} = \Omega
+$$
+
+**Velocity dynamics (with Coriolis terms):**
+
+$$
+\dot{v}_x = a_{\text{global},x} + \Omega \cdot v_y
+$$
+
+$$
+\dot{v}_y = a_{\text{global},y} - \Omega \cdot v_x
+$$
+
+**Angular dynamics:**
+
+$$
+\dot{\Omega} = \frac{\tau_z}{I}
 $$
 
 Where accelerations are computed through the complete chain:
@@ -286,24 +306,32 @@ $$
 
 ## Three-Stage Identification Protocol
 
-### Stage 1: Motor Electrical Parameters $(R_a, K)$
+### Stage 1: Motor Electrical Parameters
 
 **Objective:** Estimate armature resistance and motor constant from *steady-state* tests.
 
+$$R_a, K$$
+
 **Experimental Setup:**
 1. Lift robot (wheels free to spin) or mount motor on bench
-2. Apply constant voltage $V_i$ to one motor
+2. Apply constant voltage to one motor: $$V_i$$
 3. Wait for steady state (~2 seconds)
-4. Measure steady-state wheel speed $\omega_i$
+4. Measure steady-state wheel speed: $$\omega_i$$
 5. Repeat for 5-10 voltage levels
 
-**Physical Model:** At steady state ($\dot{\omega} = 0$), motor torque balances friction torque:
+**Physical Model:** At steady state (angular acceleration = 0), motor torque balances friction torque:
+
+$$\dot{\omega} = 0$$
 
 $$
 \tau_{\text{motor}} = \tau_{\text{friction}}
 $$
 
-With viscous friction model $\tau_{\text{friction}} = b \cdot \omega$, the electrical equation becomes:
+With viscous friction model:
+
+$$\tau_{\text{friction}} = b \cdot \omega$$
+
+the electrical equation becomes:
 
 $$
 V = R_a \cdot i + K \cdot \omega
@@ -315,7 +343,9 @@ $$
 K \cdot i = b \cdot \omega
 $$
 
-Solving for current: $i = b \cdot \omega / K$, and substituting into voltage equation:
+Solving for current and substituting into voltage equation:
+
+$$i = \frac{b \cdot \omega}{K}$$
 
 $$
 V = R_a \cdot \frac{b \cdot \omega}{K} + K \cdot \omega = \left(\frac{R_a \cdot b}{K} + K\right) \cdot \omega
@@ -333,16 +363,24 @@ $$
 \min_{R_a, K, b} \sum_{i=1}^{N} \left(\omega_{\text{meas},i} - \frac{K \cdot V_i}{R_a \cdot b + K^2}\right)^2
 $$
 
-**Output:** $R_a$ (Ω), $K$ (V/(rad/s)), friction coefficient $b$ (Nm/(rad/s))
+**Output:**
 
-### Stage 2: Moment of Inertia $(I)$
+- Armature resistance [Ω]: $$R_a$$
+- Motor constant [V/(rad/s)]: $$K$$  
+- Friction coefficient [Nm/(rad/s)]: $$b$$
+
+### Stage 2: Moment of Inertia
 
 **Objective:** Estimate robot inertia from pure rotation maneuvers.
 
+$$I$$
+
 **Experimental Setup:**
-1. Command robot to rotate in place ($v_x \approx 0$, $v_y \approx 0$)
+1. Command robot to rotate in place (minimal translation):
+   $$v_x \approx 0, \quad v_y \approx 0$$
 2. Vary angular velocity: slow → fast → stop → reverse
-3. Record $\phi(t)$, $\Omega(t)$ for 10-15 seconds
+3. Record orientation and angular velocity for 10-15 seconds:
+   $$\phi(t), \quad \Omega(t)$$
 4. Ensure minimal translation (wheels don't slip)
 
 **Why This Works:** Decouples rotational dynamics from translational. The rotational equation:
@@ -360,20 +398,28 @@ $$
 $$
 
 Where:
-- $w_\phi = 10.0$: weight for orientation tracking
-- $w_\Omega = 5.0$: weight for angular velocity tracking
+
+- Weight for orientation tracking: $$w_\phi = 10.0$$
+
+- Weight for angular velocity tracking: $$w_\Omega = 5.0$$
+
 - Translation states are ignored (weights = 0)
 
-**Output:** $I$ (kg·m²)
+**Output:**
 
-### Stage 3: Motor Compensation Factors $(C_{u_1}, C_{u_2}, C_{u_3})$
+- Moment of inertia [kg·m²]: $$I$$
+
+### Stage 3: Motor Compensation Factors
 
 **Objective:** Account for motor-to-motor variations due to manufacturing tolerances.
+
+$$C_{u_1}, C_{u_2}, C_{u_3}$$
 
 **Experimental Setup:**
 1. Execute rich trajectory (e.g., square path: right → up → left → down)
 2. Include both translations and rotations
-3. Record complete state $\mathbf{x}(t)$ for 15-20 seconds
+3. Record complete state for 15-20 seconds:
+   $$\mathbf{x}(t)$$
 4. Use varied speeds and directions
 
 **Why This is Needed:** Even with identical motor models, real motors have variations:
@@ -395,11 +441,16 @@ $$
 $$
 
 Where:
-- $w_{\text{pos}} = 3.0$: weight for position tracking $(x, y)$
-- $w_\phi = 2.0$: weight for orientation tracking
-- Velocity weights: $w_v = 0.5$ (lower priority)
 
-**Output:** $C_{u_1}, C_{u_2}, C_{u_3}$ (dimensionless, nominal = 1.0)
+- Weight for position tracking (x, y): $$w_{\text{pos}} = 3.0$$
+
+- Weight for orientation tracking: $$w_\phi = 2.0$$
+
+- Velocity weights (lower priority): $$w_v = 0.5$$
+
+**Output:**
+
+- Compensation factors [dimensionless, nominal = 1.0]: $$C_{u_1}, C_{u_2}, C_{u_3}$$
 
 **Typical Values:** 0.85 - 1.15 (within ±15% indicates acceptable motor matching)
 
@@ -487,14 +538,17 @@ Processes **real experimental data** from `data/raw/stage1.txt` for motor parame
 ### Expected Outputs
 
 **Console Output:**
-- **Stage 1:** Motor parameters $(R_a, K)$ with $R^2$ goodness-of-fit
-- **Stage 2:** Inertia $(I)$ with angular tracking RMSE and $R^2$
-- **Stage 3:** Compensation factors $(C_{u_1}, C_{u_2}, C_{u_3})$ with full state validation
+- **Stage 1:** Motor parameters with goodness-of-fit
+  - $$R_a, K, R^2$$
+- **Stage 2:** Inertia with angular tracking metrics
+  - $$I, \text{RMSE}, R^2$$
+- **Stage 3:** Compensation factors with full state validation
+  - $$C_{u_1}, C_{u_2}, C_{u_3}$$
 
 **Plots Generated:**
 1. **Wheel Geometry:** Visual verification of wheel positions and orientations
 2. **Motor Characterization:** Voltage vs. speed curve with fitted model
-3. **Angular State Tracking:** $\phi(t)$ and $\Omega(t)$ comparison (Stage 2)
+3. **Angular State Tracking:** Orientation and angular velocity comparison (Stage 2)
 4. **2D Trajectory:** Measured vs. model trajectories in X-Y plane (Stage 3)
 5. **State-by-State Validation:** All 6 states over time with RMSE metrics
 
