@@ -1,10 +1,23 @@
+<table>
+<tr>
+<td width="75%">
+
 # Omnidirectional Robot: Identification and State Estimation
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![C](https://img.shields.io/badge/C-C99%2BESP--IDF-green.svg)](https://www.espressif.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **🎓 Bachelor's Thesis Project**  
+</td>
+<td width="35%" align="right">
+
+<img src="assets/logo_udea.png" alt="Universidad de Antioquia" height="140">
+
+</td>
+</tr>
+</table>
+
+> **Bachelor's Thesis Project**  
 > This repository contains the main codebase for the undergraduate thesis: *"Fusión de sensores para el seguimiento de trayectorias en vehículos autónomos mediante modelos probabilísticos"* (Sensor Fusion for Trajectory Tracking in Autonomous Vehicles using Probabilistic Models).  
 > Universidad de Antioquia, 2026.
 
@@ -12,7 +25,7 @@ Complete implementation of **parameter identification** and **Bayesian state est
 
 ---
 
-## 📋 Overview
+## Overview
 
 This repository contains the complete workflow from robot parameter identification to real-time state estimation:
 
@@ -23,14 +36,14 @@ This repository contains the complete workflow from robot parameter identificati
 
 ### Key Contributions
 
-- ✨ **Unified execution system**: Single PowerShell script (`run.ps1`) with module-based commands
-- ✨ **Process noise methodology**: Automated Q matrix computation from experimental data
-- ✨ **Embedded deployment**: Complete ESP-IDF project with hardware-optimized filters
-- ✨ **Comprehensive documentation**: Centralized theory in `State Estimation_Python/docs/`
+- **Unified execution system**: Single PowerShell script (`run.ps1`) with module-based commands
+- **Process noise methodology**: Automated Q matrix computation from experimental data
+- **Embedded deployment**: Complete ESP-IDF project with hardware-optimized filters
+- **Comprehensive documentation**: Centralized theory in `State Estimation_Python/docs/`
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -43,7 +56,7 @@ This repository contains the complete workflow from robot parameter identificati
 ```powershell
 # Clone repository
 git clone https://github.com/MaverickST/mobile-robot-estimation-suite.git
-cd Project
+cd mobile-robot-estimation-suite
 
 # Setup unified virtual environment
 .\setup.ps1
@@ -72,11 +85,11 @@ cd Project
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 Project/
-├── run.ps1                        # 🔥 Unified execution script (recommended)
+├── run.ps1                        # Unified execution script (recommended)
 ├── setup.ps1                      # Setup virtual environment
 ├── requirements.txt               # Python dependencies (all subprojects)
 ├── .venv/                         # Shared virtual environment
@@ -183,33 +196,33 @@ idf.py -p COM3 flash monitor
 
 ---
 
-## 📊 Key Features
+## Key Features
 
 ### Robot Identification
-- ✅ **Three-stage pipeline**: Friction → Inertia → Full dynamics
-- ✅ **Experimental validation**: 10 experiments × 1000 samples @ 100 Hz
-- ✅ **Synthetic data generation**: Configurable noise levels
-- ✅ **Nonlinear least squares**: Trust-region optimization
+- **Three-stage pipeline**: Friction → Inertia → Full dynamics
+- **Experimental validation**: 10 experiments × 1000 samples @ 100 Hz
+- **Synthetic data generation**: Configurable noise levels
+- **Nonlinear least squares**: Trust-region optimization
 
 ### State Estimation (Python)
-- ✅ **Extended Kalman Filter**: Jacobian-based linearization
-- ✅ **Unscented Kalman Filter**: Sigma-point transform (α=0.5, β=2.0, κ=0.0)
-- ✅ **Particle Filter**: SIR algorithm with N=2000 particles
-- ✅ **Angle handling**: Circular mean, automatic residual wrapping
-- ✅ **Q matrix methodology**: Automated process noise from model errors
-- ✅ **Performance metrics**: RMSE, MAE, NEES, NIS
-- ✅ **Comprehensive visualization**: 2D trajectories, temporal plots, covariance ellipses
+- **Extended Kalman Filter**: Jacobian-based linearization
+- **Unscented Kalman Filter**: Sigma-point transform (α=0.5, β=2.0, κ=0.0)
+- **Particle Filter**: SIR algorithm with N=2000 particles
+- **Angle handling**: Circular mean, automatic residual wrapping
+- **Q matrix methodology**: Automated process noise from model errors
+- **Performance metrics**: RMSE, MAE, NEES, NIS
+- **Comprehensive visualization**: 2D trajectories, temporal plots, covariance ellipses
 
 ### State Estimation (C)
-- ✅ **Generalized API**: User-defined dynamics `f(x,u)` and measurements `h(x)`
-- ✅ **Embedded optimization**: ESP32-S3 deployment tested
-- ✅ **Complete linear algebra**: Matrix operations, Cholesky, LU decomposition
-- ✅ **Angle utilities**: `normalize_angle()`, `circular_mean()`, `angle_diff()`
-- ✅ **Low memory footprint**: Suitable for microcontrollers
+- **Generalized API**: User-defined dynamics `f(x,u)` and measurements `h(x)`
+- **Embedded optimization**: ESP32-S3 deployment tested
+- **Complete linear algebra**: Matrix operations, Cholesky, LU decomposition
+- **Angle utilities**: `normalize_angle()`, `circular_mean()`, `angle_diff()`
+- **Low memory footprint**: Suitable for microcontrollers
 
 ---
 
-## � Documentation
+## Documentation
 
 ### Quick Links
 
@@ -227,8 +240,14 @@ This project implements the following Bayesian estimation algorithms:
 
 **Extended Kalman Filter (EKF)**
 - Linearizes nonlinear dynamics via Jacobian matrices F and H
-- Prediction: $\mathbf{x}_{k \mid k-1} = f(\mathbf{x}_{k-1}, \mathbf{u}_k)$
-- Update: $\mathbf{K}_k = \mathbf{P}_{k \mid k-1}\mathbf{H}_k^T(\mathbf{H}_k\mathbf{P}_{k \mid k-1}\mathbf{H}_k^T + \mathbf{R}_k)^{-1}$
+- Prediction:
+
+$$\mathbf{x}_{k \mid k-1} = f(\mathbf{x}_{k-1}, \mathbf{u}_k)$$
+
+- Update:
+
+$$\mathbf{K}_k = \mathbf{P}_{k \mid k-1}\mathbf{H}_k^T(\mathbf{H}_k\mathbf{P}_{k \mid k-1}\mathbf{H}_k^T + \mathbf{R}_k)^{-1}$$
+
 - Best for: Mildly nonlinear systems, fast execution
 
 **Unscented Kalman Filter (UKF)**
@@ -248,11 +267,17 @@ See [BAYESIAN_FILTERS.md](State%20Estimation_Python/docs/BAYESIAN_FILTERS.md) fo
 
 ---
 
-## 📈 Experimental Results
+## Experimental Results
 
 **Dataset**: 10 experiments, 1000 samples each @ 100 Hz (10 seconds)
-**State**: $\mathbf{x} = [x, y, \psi, v_x, v_y, \omega]^T$
-**Measurements**: $\mathbf{z} = [v_x^{body}, v_y^{body}, \omega, \psi]^T$
+
+**State**: 
+
+$$\mathbf{x} = [x, y, \psi, v_x, v_y, \omega]^T$$
+
+**Measurements**: 
+
+$$\mathbf{z} = [v_x^{body}, v_y^{body}, \omega, \psi]^T$$
 
 | Filter | Position RMSE | Angle RMSE | NEES | Runtime |
 |--------|---------------|------------|------|---------|
@@ -289,7 +314,7 @@ Results saved to: `results/estimation/<filter_name>/`
 
 ---
 
-## 🔧 Development
+## Development
 
 ### Project Workflow
 
@@ -320,9 +345,9 @@ graph LR
 
 ---
 
-## 🎓 Academic Context
+## Academic Context
 
-This repository contains code developed for a **Master's thesis** on omnidirectional robot state estimation. The work includes:
+This repository contains code developed for a **Bachelor's thesis** on omnidirectional robot state estimation. The work includes:
 
 - Novel Q matrix computation methodology from model residuals
 - Comparative analysis of EKF/UKF/PF for omnidirectional robots

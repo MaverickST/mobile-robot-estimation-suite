@@ -4,7 +4,7 @@ Complete implementation of **generalized** state estimation algorithms in C, inc
 
 ---
 
-## 📋 Overview
+## Overview
 
 This project provides production-ready, **fully generalized** implementations of various state estimation filters used in robotics, navigation, and control systems. The API follows the design philosophy of the Python FilterPy library, allowing users to define custom dynamics and measurement models without modifying filter internals.
 
@@ -25,7 +25,7 @@ This project provides production-ready, **fully generalized** implementations of
 
 ---
 
-## 🎯 Generalized API Design
+## Generalized API Design
 
 All filters follow a consistent, generalized API inspired by Python's FilterPy:
 
@@ -55,7 +55,7 @@ float likelihood(const float *x, const float *z, const float *R, const void *use
 
 ---
 
-## 🔄 Angle Handling (Angular States)
+## Angle Handling (Angular States)
 
 ### The Problem
 
@@ -110,7 +110,7 @@ See individual filter documentation for more details.
 
 ---
 
-## 📚 References
+## References
 
 ### Available Filters
 
@@ -122,7 +122,7 @@ See individual filter documentation for more details.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -188,7 +188,7 @@ idf.py -p COM3 monitor  # Monitor output
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 State Estimation_C/
@@ -237,7 +237,7 @@ State Estimation_C/
 
 ---
 
-## 🎯 Build System
+## Build System
 
 The project uses a unified PowerShell build script (`build.ps1`) that supports multiple build targets:
 
@@ -266,7 +266,7 @@ The project uses a unified PowerShell build script (`build.ps1`) that supports m
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 ### Python Implementation & Theory
 
@@ -298,7 +298,7 @@ idf.py -p COM3 flash monitor
 
 ---
 
-## 💻 Usage Examples
+## Usage Examples
 
 ### Unscented Kalman Filter
 

@@ -4,7 +4,7 @@ Extracción automática de trayectorias completas `[x, y, φ, vx, vy, ω]` media
 
 ---
 
-## 📂 Estructura de Carpetas
+## Estructura de Carpetas
 
 ```
 Video_Robot Traking/
@@ -18,7 +18,7 @@ Video_Robot Traking/
 
 ---
 
-## 🚀 Uso Rápido
+## Uso Rápido
 
 ### **Paso 1:** Procesar Video
 ```bash
@@ -37,7 +37,7 @@ python process_imu_data.py
 
 ---
 
-## 📊 Formato de Datos
+## Formato de Datos
 
 ### Salida Final (`traj_vid_processed/traj_vid_X.csv`)
 | Columna | Descripción | Unidad |
@@ -56,7 +56,7 @@ python process_imu_data.py
 
 ---
 
-## ⚙️ Métodos Implementados
+## Métodos Implementados
 
 ### Tracking Visual (Lucas-Kanade Optical Flow)
 - Grid de 100 puntos sobre el robot
@@ -76,7 +76,7 @@ python process_imu_data.py
 
 ---
 
-## 📈 Visualización (Formato IEEE)
+## Visualización (Formato IEEE)
 
 Gráficas de 4 subplots (7.16" × 5.5", 300 DPI, Times New Roman):
 - **(a)** Trayectoria X-Y con vectores de orientación
@@ -86,7 +86,7 @@ Gráficas de 4 subplots (7.16" × 5.5", 300 DPI, Times New Roman):
 
 ---
 
-## 🔧 Requisitos
+## Requisitos
 
 ```bash
 pip install opencv-contrib-python numpy pandas scipy matplotlib
@@ -96,7 +96,7 @@ pip install opencv-contrib-python numpy pandas scipy matplotlib
 
 ---
 
-## 📝 Notas Importantes
+## Notas Importantes
 
 - **Datos para identificación:** usar solo archivos en `traj_vid_processed/`
 - **Orientación φ y ω:** provienen exclusivamente de la IMU (alta precisión)

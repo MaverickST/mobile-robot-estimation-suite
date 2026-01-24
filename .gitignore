@@ -148,6 +148,10 @@ Mkfile.old
 dts.dts.tmp
 
 # ===== DATA AND RESULTS =====
+# Assets directory - KEEP (documentation images)
+!assets/
+!assets/**
+
 # Results directory - Exclude all generated results at any depth
 results/**/*.png
 results/**/*.jpg
