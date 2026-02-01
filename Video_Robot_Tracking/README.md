@@ -1,104 +1,104 @@
-# Sistema de Seguimiento por Video para Robots Omnidireccionales
+# Video Tracking System for Omnidirectional Robots
 
-Extracción automática de trayectorias completas `[x, y, φ, vx, vy, ω]` mediante optical flow y fusión con datos de IMU.
-
----
-
-## Estructura de Carpetas
-
-```
-Video_Robot Traking/
-├── videos/                 # Videos de experimentos
-├── Exp_videos_sen/        # Datos IMU (.txt)
-├── traj_vid_data/         # Salida intermedia (video solo)
-├── traj_vid_processed/    # ✓ Salida final (video + IMU)
-├── track_simple_robust.py # 1. Procesamiento de video
-└── process_imu_data.py    # 2. Fusión con IMU
-```
+Automatic extraction of complete trajectories `[x, y, φ, vx, vy, ω]` using optical flow and IMU data fusion.
 
 ---
 
-## Uso Rápido
+## Folder Structure
 
-### **Paso 1:** Procesar Video
+```
+Video_Robot_Tracking/
+├── videos/                 # Experiment videos
+├── Exp_videos_sen/        # IMU data (.txt)
+├── traj_vid_data/         # Intermediate output (video only)
+├── traj_vid_processed/    # ✓ Final output (video + IMU)
+├── track_simple_robust.py # 1. Video processing
+└── process_imu_data.py    # 2. IMU fusion
+```
+
+---
+
+## Quick Start
+
+### **Step 1:** Process Video
 ```bash
 python track_simple_robust.py
 ```
-- Configurar `VIDEO_NUMBER = 1` (línea 16)
-- Interactivo: seleccionar robot y calibrar perspectiva (baldosa 30cm)
-- Salida: `traj_vid_data/traj_vid_1.csv`
+- Configure `VIDEO_NUMBER = 1` (line 16)
+- Interactive: select robot and calibrate perspective (30cm tile)
+- Output: `traj_vid_data/traj_vid_1.csv`
 
-### **Paso 2:** Fusionar con IMU (Batch Automático)
+### **Step 2:** Fuse with IMU (Automatic Batch)
 ```bash
 python process_imu_data.py
 ```
-- Procesa automáticamente experimentos 1-10
-- **Salida final:** `traj_vid_processed/traj_vid_X.csv` (listo para identificación)
+- Automatically processes experiments 1-10
+- **Final output:** `traj_vid_processed/traj_vid_X.csv` (ready for identification)
 
 ---
 
-## Formato de Datos
+## Data Format
 
-### Salida Final (`traj_vid_processed/traj_vid_X.csv`)
-| Columna | Descripción | Unidad |
-|---------|-------------|--------|
-| `time_s` | Tiempo (100 Hz, dt=0.01s) | s |
-| `x_m`, `y_m` | Posición (origen en t=0) | m |
-| `phi_rad` | Orientación (IMU, invertida y unwrapped) | rad |
-| `vx_m_s`, `vy_m_s` | Velocidades lineales | m/s |
-| `omega_rad_s` | Velocidad angular (gradiente de φ) | rad/s |
+### Final Output (`traj_vid_processed/traj_vid_X.csv`)
+| Column | Description | Unit |
+|--------|-------------|------|
+| `time_s` | Time (100 Hz, dt=0.01s) | s |
+| `x_m`, `y_m` | Position (origin at t=0) | m |
+| `phi_rad` | Orientation (IMU, inverted and unwrapped) | rad |
+| `vx_m_s`, `vy_m_s` | Linear velocities | m/s |
+| `omega_rad_s` | Angular velocity (gradient of φ) | rad/s |
 
-**Características clave:**
-- ✓ 1000 muestras exactas (10 segundos @ 100 Hz)
-- ✓ Sincronización automática: t=0 inicia 30ms antes del primer movimiento
-- ✓ Orientación inicial: φ₀ ≈ π/2 ± 5%
-- ✓ Sistema de coordenadas: origen en posición inicial, Y hacia arriba
-
----
-
-## Métodos Implementados
-
-### Tracking Visual (Lucas-Kanade Optical Flow)
-- Grid de 100 puntos sobre el robot
-- Detección de orientación: batería azul/morada (HSV: [100-150, 80-255, 30-180])
-- Calibración de perspectiva con baldosa de 30×30 cm
-
-### Procesamiento de IMU
-- **Corrección de inversión:** α invertido (`-alpha`) porque CCW disminuye en sensor
-- **Unwrap:** elimina discontinuidades 2π→0 **antes** de ajustar offset
-- **Suavizado:** Gaussian filter (σ=3 para α, σ=2 para ω)
-- **Sincronización:** detección automática de movimiento (umbral: 0.02 m/s)
-
-### Detección de Movimiento
-- Umbral de velocidad: `√(vx² + vy²) > 0.02 m/s`
-- Lookback: t=0 se coloca 30ms (3 muestras) antes del primer movimiento
-- Garantiza captura del transitorio inicial
+**Key Features:**
+- ✓ Exactly 1000 samples (10 seconds @ 100 Hz)
+- ✓ Automatic synchronization: t=0 starts 30ms before first movement
+- ✓ Initial orientation: φ₀ ≈ π/2 ± 5%
+- ✓ Coordinate system: origin at initial position, Y pointing upward
 
 ---
 
-## Visualización (Formato IEEE)
+## Implemented Methods
 
-Gráficas de 4 subplots (7.16" × 5.5", 300 DPI, Times New Roman):
-- **(a)** Trayectoria X-Y con vectores de orientación
-- **(b)** Orientación φ(t)
-- **(c)** Velocidades lineales vx, vy
-- **(d)** Velocidad angular ω(t)
+### Visual Tracking (Lucas-Kanade Optical Flow)
+- Grid of 100 points over the robot
+- Orientation detection: blue/purple battery (HSV: [100-150, 80-255, 30-180])
+- Perspective calibration with 30×30 cm tile
+
+### IMU Processing
+- **Inversion correction:** α inverted (`-alpha`) because CCW decreases in sensor
+- **Unwrap:** removes 2π→0 discontinuities **before** adjusting offset
+- **Smoothing:** Gaussian filter (σ=3 for α, σ=2 for ω)
+- **Synchronization:** automatic movement detection (threshold: 0.02 m/s)
+
+### Movement Detection
+- Velocity threshold: `√(vx² + vy²) > 0.02 m/s`
+- Lookback: t=0 is placed 30ms (3 samples) before first movement
+- Ensures capture of initial transient
 
 ---
 
-## Requisitos
+## Visualization (IEEE Format)
+
+4-subplot figures (7.16" × 5.5", 300 DPI, Times New Roman):
+- **(a)** X-Y trajectory with orientation vectors
+- **(b)** Orientation φ(t)
+- **(c)** Linear velocities vx, vy
+- **(d)** Angular velocity ω(t)
+
+---
+
+## Requirements
 
 ```bash
 pip install opencv-contrib-python numpy pandas scipy matplotlib
 ```
 
-**Versión OpenCV:** 4.12.0 (bug en `tracker.init()`, por eso se usa optical flow)
+**OpenCV Version:** 4.12.0 (bug in `tracker.init()`, hence optical flow is used)
 
 ---
 
-## Notas Importantes
+## Important Notes
 
-- **Datos para identificación:** usar solo archivos en `traj_vid_processed/`
-- **Orientación φ y ω:** provienen exclusivamente de la IMU (alta precisión)
-- **Posiciones x, y:** provienen del video (calibradas con perspectiva)
-- **Procesamiento batch:** `process_imu_data.py` procesa automáticamente experimentos 1-10
+- **Data for identification:** use only files in `traj_vid_processed/`
+- **Orientation φ and ω:** come exclusively from IMU (high precision)
+- **Positions x, y:** come from video (perspective-calibrated)
+- **Batch processing:** `process_imu_data.py` automatically processes experiments 1-10

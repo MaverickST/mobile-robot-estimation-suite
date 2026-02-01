@@ -493,172 +493,134 @@ pip install -r requirements.txt
 
 ### Running Examples
 
-The project includes multiple examples for different use cases:
+All identification examples are executed from the **project root** using the unified execution script `run.ps1`, as described in the [main README](../README.md#execution-system). This script manages the virtual environment and working directories automatically.
 
-#### 1. Main Example (Synthetic Data)
+From the project root directory:
+
 ```powershell
-.\run.ps1
-# or
-.\run.ps1 -Example main
+# Three-stage identification examples
+.\run.ps1 stage1          # Stage 1: Motor electrical parameters
+.\run.ps1 stage2          # Stage 2: Moment of inertia
+.\run.ps1 stage3          # Stage 3: Motor compensation factors
+
+# Simulation testing
+.\run.ps1 sim_test        # Test robot model vs experimental data
+
+# Show all available commands
+.\run.ps1 -Help
 ```
 
-Runs the complete three-stage identification with synthetic data. Good for:
-- Understanding the identification workflow
-- Testing the implementation
-- Verifying the code setup
+#### Stage-by-Stage Execution
 
-#### 2. Synthetic Data Examples
+**Stage 1 - Motor Parameters:**
 ```powershell
-.\run.ps1 -Example synthetic
+.\run.ps1 stage1
 ```
+Processes experimental steady-state motor tests from `data/raw/motor_tests/stage1_X.txt`:
+- Loads encoder and PWM data (12 seconds, 8 segments)
+- Applies Kalman filtering to velocities
+- Converts PWM to voltage (battery voltage measured during experiment)
+- Extracts steady-state values from each segment
+- Identifies Ra, K parameters via nonlinear optimization
 
-Runs detailed examples including:
-- Kinematic validation with visualization
-- Complete three-stage identification
-- Multiple test scenarios
-
-#### 3. Stage 1 Experimental Identification
+**Stage 2 - Inertia Identification:**
 ```powershell
-.\run.ps1 -Example stage1
+.\run.ps1 stage2
 ```
+Estimates robot inertia from pure rotation tests in `data/raw/rotation_tests/stage2_X.txt`:
+- Uses IMU orientation and encoder data
+- Reconstructs full state vector via inverse kinematics
+- Minimizes weighted angular tracking error
 
-Processes **real experimental data** from `data/raw/stage1.txt` for motor parameter identification:
-- Loads encoder and PWM data
-- Applies Kalman filtering (Q=0.001, R=1.12)
-- Converts PWM to voltage (6S battery, 22.2V nominal)
-- Extracts steady-state values from 8 segments
-- Identifies Ra, K parameters for selected motor
-- Generates comprehensive plots
+**Stage 3 - Compensation Factors:**
+```powershell
+.\run.ps1 stage3
+```
+Calculates motor compensation factors using video+IMU trajectory data:
+- Source data: `data/raw/video_trajectories/` (processed by Video_Robot_Tracking)
+- Output location: `Video_Robot_Tracking/traj_vid_processed/`
+- Rich trajectories with mixed translations and rotations
+- Optimizes compensation factors to minimize position/orientation errors
 
-**Configuration:** Edit `src/examples/stage1_experimental.py` to:
-- Change `MOTOR_ID` (1, 2, or 3)
-- Adjust battery voltage if needed
-- Modify segment processing parameters
+**Simulation Testing:**
+```powershell
+.\run.ps1 sim_test
+```
+Validates complete robot model against experimental trajectory data:
+- Simulates forward dynamics with identified parameters
+- Compares model predictions vs. measurements
+
+#### Configuration
+
+To modify experiment parameters, edit the corresponding example file in `Robot_Identification/src/examples/`:
+- `stage1_experimental.py` - Motor selection, battery voltage, segment processing
+- `stage2_experimental.py` - Weight factors, optimization settings
+- `stage3_experimental_vid.py` - Trajectory selection, compensation bounds
+- `test_simulation_vid4.py` - Simulation parameters, integration method
+
+**Note:** Do not run Python scripts directly from the `Robot_Identification/` directory. Always use `.\run.ps1` from the project root to ensure proper environment activation and path configuration.
 
 ### Expected Outputs
 
 **Console Output:**
-- **Stage 1:** Motor parameters with goodness-of-fit
-  - $$R_a, K, R^2$$
-- **Stage 2:** Inertia with angular tracking metrics
-  - $$I, \text{RMSE}, R^2$$
-- **Stage 3:** Compensation factors with full state validation
-  - $$C_{u_1}, C_{u_2}, C_{u_3}$$
+- **Stage 1:** Ra, K, friction coefficient (b), R² goodness-of-fit
+- **Stage 2:** Moment of inertia (I), RMSE on angular states
+- **Stage 3:** Compensation factors Cu1, Cu2, Cu3, full-state RMSE
 
-**Plots Generated:**
-1. **Wheel Geometry:** Visual verification of wheel positions and orientations
-2. **Motor Characterization:** Voltage vs. speed curve with fitted model
-3. **Angular State Tracking:** Orientation and angular velocity comparison (Stage 2)
-4. **2D Trajectory:** Measured vs. model trajectories in X-Y plane (Stage 3)
-5. **State-by-State Validation:** All 6 states over time with RMSE metrics
+**Generated Plots:**
+- **Stage 1:** Voltage vs. speed with fitted model
+- **Stage 2:** Angular state tracking (φ and ω vs. time)
+- **Stage 3:** 2D trajectory comparison and state-by-state validation
 
-### Using Experimental Data (Custom Integration)
+**Results Location:** `Robot_Identification/results/identification/`
 
-To use your own experimental data, replace the synthetic data generation with your measurements:
+## Installation
 
-```python
-from main import ThreeStageIdentification
+This project uses a unified virtual environment managed from the project root. See the [main README](../README.md#quick-start) for complete setup instructions.
 
-# Robot parameters (measure these physically)
-wheel_angles = [150, 270, 30]  # degrees
-d = 0.099  # distance to wheels (m)
-r = 0.0325  # wheel radius (m)
-M = 3.178  # robot mass (kg)
-
-# Initialize identifier
-identifier = ThreeStageIdentification(wheel_angles, d, r, M)
-
-# Stage 1: Load motor bench test data
-# pwm_vals: array of PWM duty cycles (0-100%)
-# speeds: array of steady-state wheel speeds (rad/s)
-# V_battery: battery voltage during test (V)
-from main import pwm_to_voltage
-voltages = pwm_to_voltage(pwm_vals, V_battery)
-Ra, K = identifier.stage1_motor_parameters(voltages, speeds, motor_id=1)
-
-# Stage 2: Load rotation trajectory data
-# t_rot: time vector (s)
-# u_rot: control inputs (N x 3 array, in volts)
-# y_rot: measured states (N x 6 array: x, y, phi, vx, vy, omega)
-I = identifier.stage2_inertia(t_rot, u_rot, y_rot, Ra, K, plot=True)
-
-# Stage 3: Load full trajectory data
-# t_full: time vector (s)
-# u_full: control inputs (N x 3 array, in volts)
-# y_full: measured states (N x 6 array)
-Cu1, Cu2, Cu3 = identifier.stage3_compensation(
-    t_full, u_full, y_full, Ra, K, I, plot=True
-)
-
-# Display summary
-identifier.get_summary()
+**Quick setup:**
+```powershell
+# From project root
+.\setup.ps1
 ```
 
-### PWM to Voltage Conversion
-
-If your embedded system uses PWM (0-100%) instead of voltages:
-
-```python
-from main import pwm_to_voltage
-
-# Example: Convert PWM array to voltages
-pwm_data = [65.0, 70.0, 60.0]  # PWM percentages for motors 1, 2, 3
-V_battery = 11.8  # Measured battery voltage during experiment (V)
-
-# Convert to voltages
-u_voltages = pwm_to_voltage(pwm_data, V_battery)
-# Result: [7.67, 8.26, 7.08] volts
-
-# For time-series data:
-import numpy as np
-pwm_trajectory = np.array([[50, 50, 50],
-                           [60, 55, 58],
-                           [70, 65, 68]])
-V_bat = 12.0
-u_trajectory = pwm_to_voltage(pwm_trajectory, V_bat)
-```
-
-**Important:** Always log $V_{\text{bat}}$ during experiments as it decreases with discharge!
+This installs all dependencies for Robot_Identification, State Estimation, and Video Tracking modules.
 
 ## Project Structure
 
 ```
-Robot Identification/
-├── main.py                         # Entry point - runs examples
-├── src/                            # Main package
-│   ├── kinematics/                # Kinematic modeling
-│   │   └── validator.py           # KinematicValidator class
-│   ├── models/                    # Robot dynamics
-│   │   └── robot.py               # OmnidirectionalRobot class
-│   ├── identification/            # Identification algorithms
-│   │   └── three_stage.py         # ThreeStageIdentification class
-│   ├── utils/                     # Utilities (PWM conversion, etc.)
-│   └── examples/                  # Usage examples
-├── requirements.txt               # Python dependencies
-└── STRUCTURE.md                   # Detailed architecture docs
+Robot_Identification/
+├── src/
+│   ├── kinematics/              # Kinematic matrix computation and validation
+│   ├── models/                  # Robot dynamics (OmnidirectionalRobot class)
+│   ├── identification/          # ThreeStageIdentification algorithm
+│   ├── utils/                   # PWM conversion utilities
+│   └── examples/                # Executable scripts (stage1, stage2, stage3)
+├── shared_utils/                # Shared utilities (signal processing, data loading)
+└── results/                     # Output directory (plots and metrics)
 ```
 
-**Usage:**
-```python
-# Run complete example workflow
-python main.py
+**Key modules:**
+- `ThreeStageIdentification`: Main identification class
+- `OmnidirectionalRobot`: Forward dynamics model
+- `KinematicValidator`: Kinematic matrix computation
 
-# Or import modules for custom usage
-from src.kinematics import KinematicValidator
-from src.models import OmnidirectionalRobot
-from src.identification import ThreeStageIdentification
-```
+## Data Requirements
 
-See `STRUCTURE.md` for detailed module documentation and development guidelines.
+**Stage 1 (Motor Tests):**
+- Format: CSV with columns `[t, ax, ay, alpha, w1, w2, w3, u1, u2, u3, ...]`
+- Duration: ~12 seconds, 8 constant-input segments
+- Required: Wheel velocities (rad/s), PWM inputs (%)
 
-## Future Work
+**Stage 2 (Rotation Tests):**
+- Format: Same as Stage 1
+- Maneuver: Pure rotation in place
+- Required: IMU orientation (alpha), wheel velocities, control inputs
 
-- [ ] Load experimental data from files (CSV/MAT format)
-- [ ] Real-time data acquisition interface
-- [ ] Adaptive compensation for time-varying parameters
-- [ ] Extended Kalman Filter for online estimation
-- [ ] GUI for parameter tuning and visualization
-- [ ] Export identified models to standard formats (URDF, JSON)
+**Stage 3 (Video Trajectories):**
+- Format: CSV from `process_imu_data.py` with columns `[time_s, x_m, y_m, phi_rad, vx_m_s, vy_m_s, omega_rad_s, u1_pwm, u2_pwm, u3_pwm]`
+- Duration: ≥10 seconds @ 100 Hz
+- Required: Full state vector + synchronized control inputs
 
 ## Theoretical Background and References
 
